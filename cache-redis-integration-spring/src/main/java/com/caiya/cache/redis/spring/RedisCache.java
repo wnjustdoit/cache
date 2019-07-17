@@ -4,7 +4,6 @@ import com.caiya.cache.CacheApi;
 import com.caiya.cache.RedisConstant;
 import com.caiya.cache.ScanResult;
 import com.caiya.cache.SetOption;
-import com.caiya.cache.*;
 import org.springframework.data.redis.cache.RedisCacheKey;
 import org.springframework.data.redis.connection.RedisConnectionCommands;
 import org.springframework.data.redis.connection.RedisServerCommands;
@@ -22,7 +21,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis Cache Implementation, Base on spring-data-redis.
+ * Redis Cache Implementation, Based on spring-data-redis.
  *
  * @author wangnan
  * @see org.springframework.data.redis.core.RedisOperations

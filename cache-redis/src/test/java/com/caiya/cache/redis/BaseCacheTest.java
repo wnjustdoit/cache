@@ -1,45 +1,37 @@
-package com.caiya.cache.redis.spring;
+package com.caiya.cache.redis;
 
-import com.caiya.cache.CacheApi;
-import com.caiya.cache.RedisConstant;
-import com.caiya.cache.SetOption;
-import com.caiya.cache.test.BaseTest;
-import org.junit.*;
+import com.caiya.cache.*;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.springframework.data.redis.core.RedisTemplate;
 import redis.clients.util.JedisClusterCRC16;
 
-import javax.annotation.Resource;
-
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-/**
- * RedisCacheTest.
- *
- * @author wangnan
- * @since 1.1
- */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RedisCacheTest extends BaseTest {
+public abstract class BaseCacheTest {
 
-    private CacheApi<String, Object> cache;
+    protected CacheApi<String, Object> cache;
 
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
-
-    @Before
-    public void setUp() {
-        cache = new RedisCache<>(redisTemplate);
+    @Test
+    @Ignore
+    public void testParallel() throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+        for (int i = 0; i < 100000; i++) {
+            final int finalI = i;
+            executorService.execute(new Thread(() -> cache.set("testParallel", finalI, 1000)));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.MINUTES);
     }
-
-    @After
-    public void tearDown() {
-
-    }
-
 
     @Test
     public void test_Z1_Del() {
@@ -72,9 +64,13 @@ public class RedisCacheTest extends BaseTest {
         cache.del("test_jedis_cache3");// init
 
         String result = cache.set("test_jedis_cache3", "测试jedis缓存2", SetOption.ifPresent(), 60 * 60, TimeUnit.SECONDS);
+        assertNotEquals("OK", result);
         result = cache.set("test_jedis_cache3", "测试jedis缓存2", SetOption.ifAbsent(), 60 * 60, TimeUnit.SECONDS);
+        assertEquals("OK", result);
         result = cache.set("test_jedis_cache3", "测试jedis缓存2", SetOption.ifPresent(), 60 * 60, TimeUnit.SECONDS);
+        assertEquals("OK", result);
         result = cache.set("test_jedis_cache3", "测试jedis缓存2", SetOption.ifAbsent(), 60 * 60, TimeUnit.SECONDS);
+        assertNotEquals("OK", result);
 
         cache.del("test_jedis_cache3");// delete
     }
@@ -93,15 +89,27 @@ public class RedisCacheTest extends BaseTest {
 
     @Test
     @Ignore
-    public void test_C_Scan() {
-        List<String> keySet = cache.scan("erp_session*", 100);
-        assertTrue(keySet.size() > 0);
+    public void test_C1_Scan() {
+//
+        cache.scan("", 1);
     }
 
     @Test
-    @Ignore
-    public void testScan1() {
-        cache.scan("", "", 1);
+    public void test_C2_Scan() {
+        cache.set("{testhashtag}:hello", "world", 600);
+        cache.set("{testhashtag}:hey", "boy", 600);
+        Set<String> keySet = new HashSet<>();
+        String scanCursor = "0";
+        int count = 0;
+        int batchMaxSize = 100;
+        do {
+            ScanResult<String> scanResult = cache.scan(scanCursor, "{testhashtag}:he*", batchMaxSize);
+            scanCursor = scanResult.getStringCursor();
+            keySet.addAll(scanResult.getResult());
+            count++;// 这里仅作计数,batchMaxSize影响循环次数
+            cache.del(scanResult.getResult().toArray(new String[0]));// 删除
+        } while (!scanCursor.equals("0"));
+        assertEquals(2, keySet.size());
     }
 
     @Test
@@ -123,24 +131,39 @@ public class RedisCacheTest extends BaseTest {
     }
 
     @Test
+    public void testSlot() {
+        Map<Integer, List<String>> slotKeys = new HashMap<>();
+        for (int i = 0; i < 10000; i++) {
+            String key = "test" + i;
+            int slot = JedisClusterCRC16.getSlot(key);
+            if (!slotKeys.containsKey(slot)) {
+                slotKeys.put(slot, new ArrayList<>());
+            }
+            slotKeys.get(slot)
+                    .add(key);
+        }
+        assertNotNull(slotKeys);
+    }
+
+    @Test
     public void test_F_A_Rename() {
         String sourceKey, targetKey;
         // 相同hash槽
         sourceKey = "test3504";
         targetKey = "test6276";
         assertEquals(JedisClusterCRC16.getSlot(sourceKey), JedisClusterCRC16.getSlot(targetKey));
-        testRename(sourceKey, targetKey, true, null);
-        testRename(sourceKey, targetKey, true, RedisConstant.Operation.HASH);
+        testRename(sourceKey, targetKey, null);
+        testRename(sourceKey, targetKey, RedisConstant.Operation.HASH);
 
         // 不同hash槽
         sourceKey = "test1234";
         targetKey = "test2345";
         assertNotEquals(JedisClusterCRC16.getSlot(sourceKey), JedisClusterCRC16.getSlot(targetKey));
-        testRename(sourceKey, targetKey, false, null);
-        testRename(sourceKey, targetKey, false, RedisConstant.Operation.HASH);
+        testRename(sourceKey, targetKey, null);
+        testRename(sourceKey, targetKey, RedisConstant.Operation.HASH);
     }
 
-    private void testRename(String sourceKey, String targetKey, boolean isSameSlot, RedisConstant.Operation operation) {
+    private void testRename(String sourceKey, String targetKey, RedisConstant.Operation operation) {
         cache.del(sourceKey);
         cache.del(targetKey);
         if (operation == RedisConstant.Operation.HASH) {
@@ -156,13 +179,7 @@ public class RedisCacheTest extends BaseTest {
         cache.rename(sourceKey, targetKey, operation);
         assertFalse(cache.exists(sourceKey));
         assertTrue(cache.exists(targetKey));
-        // spring-data-redis bug!
-        if (isSameSlot) {
-            assertTrue(cache.ttl(targetKey) > 900 && cache.ttl(targetKey) <= 1000);
-        } else {
-            assertEquals(cache.ttl(targetKey), -1);
-        }
-        // spring-data-redis bug!
+        assertTrue(cache.ttl(targetKey) > 990 && cache.ttl(targetKey) <= 1000);
         assertTrue(cache.del(targetKey) > 0);
         assertFalse(cache.exists(targetKey));
     }
@@ -175,9 +192,7 @@ public class RedisCacheTest extends BaseTest {
         assertEquals(getLength(value) + getLength(appendVal), (long) result);
     }
 
-    private long getLength(Object obj) {
-        return (((RedisCache) cache).getValueSerializer()).serialize(obj).length;
-    }
+    protected abstract long getLength(Object obj);
 
     @Test
     @Ignore
@@ -186,15 +201,15 @@ public class RedisCacheTest extends BaseTest {
     }
 
     @Test
+    @Ignore
     public void testDbSize() {
-        cache.set("testdbsize", "", 600);
-        assertTrue(cache.dbSize() > 1);
-        cache.del("testdbsize");
+        cache.dbSize();
     }
 
     @Test
+    @Ignore
     public void testPing() {
-        assertEquals("PONG", cache.ping());
+        cache.ping();
     }
 
     @Test
@@ -280,11 +295,10 @@ public class RedisCacheTest extends BaseTest {
     }
 
     @Test
-    @Ignore
     public void test_I_eval() {
         Object result = cache.eval("if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end", 1, "test_jedis_cache", "vvvvalue");
         assertEquals(result, 0L);
     }
-
-
+    
+    
 }

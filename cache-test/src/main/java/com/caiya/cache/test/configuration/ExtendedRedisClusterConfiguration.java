@@ -1,6 +1,7 @@
 package com.caiya.cache.test.configuration;
 
 import com.caiya.cache.redis.spring.ExtendedRedisCacheManager;
+import com.caiya.cache.test.component.RedisProperties;
 import com.caiya.cache.test.util.Constant;
 import com.caiya.serialization.util.StringUtils;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Redis Cluster相关配置
+ * Redis Cluster相关配置.
  *
  * @author wangnan
  * @since 1.0

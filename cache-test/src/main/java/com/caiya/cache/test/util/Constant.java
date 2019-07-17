@@ -8,7 +8,7 @@ package com.caiya.cache.test.util;
  */
 public class Constant {
 
-    public static final String DEFAULT_CACHE_NAME = "mama_cache";
+    public static final String DEFAULT_CACHE_NAME = "caiya_cache";
 
     public static final long DEFAULT_EXPIRATION = 60 * 60 * 2;
 

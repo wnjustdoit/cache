@@ -92,13 +92,10 @@ public class RedisLockTest {
     public void testParallel() throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(1000);
         for (int i = 0; i < 100000; i++) {
-            executorService.execute(new Thread() {
-                @Override
-                public void run() {
-                    RedisLock redisLock = new RedisLock(cache, "Mutuki官方旗舰店");
-                    testInternal(redisLock);
-                }
-            });
+            executorService.execute(new Thread(() -> {
+                RedisLock redisLock = new RedisLock(cache, "Mutuki官方旗舰店");
+                testInternal(redisLock);
+            }));
             try {
                 TimeUnit.SECONDS.sleep(new Random().nextInt(2));
             } catch (InterruptedException e) {

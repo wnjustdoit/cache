@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis Cache Implementation, Base on JedisCluster.
+ * Redis Cache Implementation, Based on JedisCluster.
  * Method {@link #close()} needs to be invoked after using the {@link JedisCache} client,
  * this operation likes {@link JedisCluster} client.
  * <p>
@@ -38,7 +38,7 @@ public class JedisCache<K, V> implements Cache<K, V> {
     private static final Serializer<String> STRING_SERIALIZER = new StringSerializer();
 
     /**
-     * JDK Serialization(not assigned any ClassLoader)
+     * JDK Serialization(not assigned to any ClassLoader)
      */
     private static final Serializer<Object> JDK_SERIALIZATION_SERIALIZER = new JdkSerializationSerializer();
 

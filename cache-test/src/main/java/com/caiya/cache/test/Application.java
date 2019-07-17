@@ -7,7 +7,7 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
- * 应用启动入口
+ * 应用启动入口.
  *
  * @author wangnan
  * @since 1.0

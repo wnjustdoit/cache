@@ -1,5 +1,7 @@
 package com.caiya.cache.redis.util;
 
+import java.time.Duration;
+
 /**
  * 常量类.
  *
@@ -8,8 +10,8 @@ package com.caiya.cache.redis.util;
  */
 public class Constant {
 
-    public static final String DEFAULT_CACHE_NAME = "mama_cache";
+    public static final String DEFAULT_CACHE_NAME = "caiya_cache";
 
-    public static final long DEFAULT_EXPIRATION = 60 * 60 * 2;
+    public static final Duration DEFAULT_EXPIRATION = Duration.ofHours(2);
 
 }
