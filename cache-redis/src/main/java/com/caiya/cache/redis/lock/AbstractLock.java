@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.UUID;
 
 /**
  * Abstract class for Lock Implementations.
@@ -15,29 +16,24 @@ public abstract class AbstractLock<T> implements Lock<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final long DEFAULT_LOCK_TIME_SECONDS = 20;
+    private static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 20;
 
-    private static final long DEFAULT_MAX_WAIT_SECONDS = 30;
+    private static final long DEFAULT_TRY_LOCK_DURATION_SECONDS = Integer.MAX_VALUE;
 
     /**
-     * 锁的名字
+     * The lock name.
      */
     private String name;
 
     /**
-     * 锁的对象
+     * The unique lock value in distributed situation, associated with current thread
      */
-    private T target;
+    private String value;
 
     /**
-     * 锁的操作时间,防止造成死锁
+     * The lock timeout. To avoid dead lock.
      */
-    private Duration lockTimeout = Duration.ofSeconds(DEFAULT_LOCK_TIME_SECONDS);
-
-    /**
-     * 等待锁定的最大尝试时间(之前用最大尝试次数和每两次尝试间隔时间指定)
-     */
-    private Duration maxWaitTime = Duration.ofSeconds(DEFAULT_MAX_WAIT_SECONDS);
+    private Duration lockTimeout = Duration.ofSeconds(DEFAULT_LOCK_EXPIRATION_SECONDS);
 
     /**
      * Integration method for easy to use.
@@ -51,7 +47,8 @@ public abstract class AbstractLock<T> implements Lock<T> {
             throw new IllegalArgumentException("callback cannot be null");
         }
 
-        boolean locked = lock();
+        // here, try to lock only once!!
+        boolean locked = tryLock();
         if (locked) {
             try {
                 return callBack.onSuccess();
@@ -60,7 +57,7 @@ public abstract class AbstractLock<T> implements Lock<T> {
             }
         }
 
-        callBack.onFailure(new RuntimeException("redis lock failed"));
+        callBack.onFailure(new RuntimeException("lock failed"));
         return null;
     }
 
@@ -74,23 +71,37 @@ public abstract class AbstractLock<T> implements Lock<T> {
         return name;
     }
 
-    protected void setTarget(T target) {
-        this.target = target;
+    /**
+     * 如果是分布式环境，构成形式可以是:MacId + JvmRoute + ThreadId.
+     * <p>
+     * 默认使用UUID标记.
+     * </p>
+     *
+     * @return the unique global lock value
+     */
+    protected String getValue() {
+        if (this.value == null) {
+            this.value = getRandomUUID();
+        }
+        return this.value;
     }
 
-    @Override
-    public T getTarget() {
-        return target;
+    public void setValue(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("lock value cannot be null");
+        }
+        this.value = value;
+    }
+
+    private String getRandomUUID() {
+        return UUID.randomUUID().toString();
     }
 
     public void setLockTimeout(Duration lockTimeout) {
-        if (lockTimeout != null)
-            this.lockTimeout = lockTimeout;
-    }
-
-    public void setMaxWaitTime(Duration maxWaitTime) {
-        if (maxWaitTime != null)
-            this.maxWaitTime = maxWaitTime;
+        if (lockTimeout == null) {
+            throw new IllegalArgumentException("lock timeout cannot be null");
+        }
+        this.lockTimeout = lockTimeout;
     }
 
     @Override
@@ -98,8 +109,4 @@ public abstract class AbstractLock<T> implements Lock<T> {
         return lockTimeout;
     }
 
-    @Override
-    public Duration getMaxWaitTime() {
-        return maxWaitTime;
-    }
 }

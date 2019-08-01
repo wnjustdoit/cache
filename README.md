@@ -42,4 +42,4 @@
         <version>${latest-version}</version>
     </dependency>
 ```
-4. 用法，见cache-redis、cache-test模块中的单元测试；基于注解的缓存用法见com.caiya.cache.redis.spring.ExtendedRedisCacheManager类前注释
+4. 用法（包括分布式锁），见cache-redis、cache-test模块中的单元测试；基于注解的缓存用法见com.caiya.cache.redis.spring.ExtendedRedisCacheManager类前注释

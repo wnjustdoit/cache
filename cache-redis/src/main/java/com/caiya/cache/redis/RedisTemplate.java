@@ -244,4 +244,9 @@ public class RedisTemplate<K, V> extends RedisAccessor<K, V> implements RedisOpe
         return execute(redisCache -> redisCache.eval(script, keyCount, params));
     }
 
+    @Override
+    public byte[] getKeyPrefix() {
+        return ((JedisConnectionFactory) getConnectionFactory()).getKeyPrefix();
+    }
+
 }

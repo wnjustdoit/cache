@@ -451,6 +451,7 @@ public class JedisCache<K, V> implements Cache<K, V> {
         this.name = name;
     }
 
+    @Override
     public byte[] getKeyPrefix() {
         return keyPrefix;
     }

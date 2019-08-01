@@ -440,6 +440,11 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         this.keyPrefix = keyPrefix;
     }
 
+    @Override
+    public byte[] getKeyPrefix() {
+        return keyPrefix;
+    }
+
     public void setName(String name) {
         this.name = name;
     }

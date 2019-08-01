@@ -353,4 +353,9 @@ public interface CacheApi<K, V> {
      */
     Object eval(String script, int keyCount, String... params);
 
+    /**
+     * @return Cache key prefix.
+     */
+    byte[] getKeyPrefix();
+
 }
