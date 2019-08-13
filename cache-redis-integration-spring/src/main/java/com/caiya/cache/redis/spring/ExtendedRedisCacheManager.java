@@ -3,16 +3,16 @@ package com.caiya.cache.redis.spring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.data.redis.cache.RedisCachePrefix;
-import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.cache.RedisCache;
+import org.springframework.util.StringUtils;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.Collection;
-import java.util.Collections;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 /**
@@ -46,23 +46,18 @@ public class ExtendedRedisCacheManager extends RedisCacheManager {
 
     private static final Pattern CALCULATE_PATTERN = Pattern.compile("[+\\-*/%]");
 
-    /**
-     * Default {@link #setDefaultExpiration(long)} (2 hours).
-     */
-    public static final int DEFAULT_MAX_LIVE_TIME_SECONDS = 60 * 60 * 2;
-
-    private long defaultExpiration = DEFAULT_MAX_LIVE_TIME_SECONDS;
-
     private String defaultCacheName;
 
     private char separator = '#';
 
-    public ExtendedRedisCacheManager(RedisOperations redisOperations) {
-        this(redisOperations, Collections.<String>emptyList());
-    }
+    private final RedisCacheWriter cacheWriter;
 
-    public ExtendedRedisCacheManager(RedisOperations redisOperations, Collection<String> cacheNames) {
-        super(redisOperations, cacheNames);
+    private final RedisCacheConfiguration cacheConfiguration;
+
+    public ExtendedRedisCacheManager(RedisCacheWriter cacheWriter, RedisCacheConfiguration cacheConfiguration) {
+        super(cacheWriter, cacheConfiguration);
+        this.cacheWriter = cacheWriter;
+        this.cacheConfiguration = cacheConfiguration;
     }
 
     @Override
@@ -88,12 +83,14 @@ public class ExtendedRedisCacheManager extends RedisCacheManager {
 
         // get expiration from name
         Long expiration = getExpiration(name, index);
-        if (expiration == null || expiration < 0) {
+        RedisCacheConfiguration currentCacheConfiguration = cacheConfiguration;
+        if (expiration != null && expiration >= 0) {
+            currentCacheConfiguration = cacheConfiguration.entryTtl(Duration.ofSeconds(expiration));
+        } else {
             logger.warn("Default expiration time will be used for cache: '{}' because cannot parse: '{}', original name: {}", cacheName, expiration, name);
-            expiration = this.defaultExpiration;
         }
 
-        return new RedisCache(cacheName, (isUsePrefix() ? getCachePrefix().prefix(cacheName) : null), (RedisOperations<?, ?>) getRedisOperations(), expiration);
+        return new ExtendedRedisCache(cacheName, cacheWriter, currentCacheConfiguration);
     }
 
 
@@ -128,23 +125,15 @@ public class ExtendedRedisCacheManager extends RedisCacheManager {
         return expiration;
     }
 
-    @Override
-    public void setUsePrefix(boolean usePrefix) {
-        super.setUsePrefix(usePrefix);
-    }
-
-    @Override
-    public void setCachePrefix(RedisCachePrefix cachePrefix) {
-        super.setCachePrefix(cachePrefix);
-    }
-
     public void setDefaultCacheName(String defaultCacheName) {
         this.defaultCacheName = defaultCacheName;
     }
 
     @Override
-    public void setDefaultExpiration(long defaultExpireTime) {
-        super.setDefaultExpiration(defaultExpireTime);
-        this.defaultExpiration = defaultExpireTime;
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        if (StringUtils.isEmpty(this.defaultCacheName)) {
+            throw new IllegalArgumentException("cache name cannot be empty.");
+        }
     }
 }

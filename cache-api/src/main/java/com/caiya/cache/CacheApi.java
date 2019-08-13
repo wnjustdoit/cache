@@ -1,5 +1,6 @@
 package com.caiya.cache;
 
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +69,6 @@ public interface CacheApi<K, V> {
      * @param expirationTime liveTime
      * @param timeUnit       the timeunit of liveTime
      * @return response
-     * @throws CacheException
      */
     String set(K key, V value, SetOption setOption, long expirationTime, TimeUnit timeUnit);
 
@@ -150,6 +150,44 @@ public interface CacheApi<K, V> {
      * @return liveTime
      */
     long ttl(K key);
+
+    /**
+     * Increment an integer value stored as string value of {@code key} by 1.
+     *
+     * @param key must not be {@literal null}.
+     * @return {@literal null} when used in pipeline / transaction.
+     * @see <a href="http://redis.io/commands/incr">Redis Documentation: INCR</a>
+     */
+    Long incr(K key);
+
+    /**
+     * Increment an integer value stored of {@code key} by {@code delta}.
+     *
+     * @param key   must not be {@literal null}.
+     * @param value the increase number
+     * @return {@literal null} when used in pipeline / transaction.
+     * @see <a href="http://redis.io/commands/incrby">Redis Documentation: INCRBY</a>
+     */
+    Long incrBy(K key, long value);
+
+    /**
+     * Decrement an integer value stored as string value of {@code key} by 1.
+     *
+     * @param key must not be {@literal null}.
+     * @return {@literal null} when used in pipeline / transaction.
+     * @see <a href="http://redis.io/commands/decr">Redis Documentation: DECR</a>
+     */
+    Long decr(K key);
+
+    /**
+     * Decrement an integer value stored as string value of {@code key} by {@code value}.
+     *
+     * @param key   must not be {@literal null}.
+     * @param value the decrease number
+     * @return {@literal null} when used in pipeline / transaction.
+     * @see <a href="http://redis.io/commands/decrby">Redis Documentation: DECRBY</a>
+     */
+    Long decrBy(K key, long value);
 
     /**
      * Rename key {@code oldKey} to {@code newKey}.

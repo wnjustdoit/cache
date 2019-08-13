@@ -202,6 +202,26 @@ public class JedisCache<K, V> implements Cache<K, V> {
     }
 
     @Override
+    public Long incr(K key) {
+        return jedisCluster.incr(rawKey(key));
+    }
+
+    @Override
+    public Long incrBy(K key, long integer) {
+        return jedisCluster.incrBy(rawKey(key), integer);
+    }
+
+    @Override
+    public Long decr(K key) {
+        return jedisCluster.decr(rawKey(key));
+    }
+
+    @Override
+    public Long decrBy(K key, long integer) {
+        return jedisCluster.decrBy(rawKey(key), integer);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public String rename(K oldKey, K newKey) {
         return rename(oldKey, newKey, null);

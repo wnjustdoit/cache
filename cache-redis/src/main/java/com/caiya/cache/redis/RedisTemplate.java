@@ -131,6 +131,26 @@ public class RedisTemplate<K, V> extends RedisAccessor<K, V> implements RedisOpe
     }
 
     @Override
+    public Long incr(K key) {
+        return execute(redisCache -> redisCache.incr(key));
+    }
+
+    @Override
+    public Long incrBy(K key, long integer) {
+        return execute(redisCache -> redisCache.incrBy(key, integer));
+    }
+
+    @Override
+    public Long decr(K key) {
+        return execute(redisCache -> redisCache.decr(key));
+    }
+
+    @Override
+    public Long decrBy(K key, long integer) {
+        return execute(redisCache -> redisCache.decrBy(key, integer));
+    }
+
+    @Override
     public String rename(K oldKey, K newKey) {
         return execute(redisCache -> redisCache.rename(oldKey, newKey));
     }

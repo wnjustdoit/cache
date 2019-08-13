@@ -9,7 +9,7 @@
         <module>cache-api</module>
         <module>cache-redis</module>
         <module>cache-redis-integration-spring</module>
-        <module>cache-test</module>
+        <module>cache-redis-spring-boot-starter</module>
     </modules>
     <packaging>pom</packaging>
 

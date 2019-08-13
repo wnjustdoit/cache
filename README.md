@@ -1,13 +1,14 @@
 ## 基于Redis实现的缓存模块
 #### 实现说明
-* 基于rediscluster(redis版本3.+以上);
-* 客户端使用(Socket、)Jedis、JedisCluster以及spring-data-redis;
-* cache-redis模块使用JedisCluster实现,cache-redis-integration-spring使用spring-data-redis实现(集成spring框架,并支持更高级的cache注解);
-* 需要注意的是:JedisCluster底层实现默认使用连接池,并对多key的命令支持不全,因为多个key不一定在同一个hash槽或者节点上
+* 基于rediscluster（redis版本3.+以上）；
+* 客户端使用（Socket、）Jedis、JedisCluster以及spring-data-redis；
+* cache-redis模块使用JedisCluster实现，cache-redis-spring-boot-starter是基于cache-redis模块自定的starter；
+* cache-redis-integration-spring使用spring-data-redis实现（集成spring框架，并支持更高级的cache注解）；
+* 需要注意的是：JedisCluster底层实现默认使用连接池,并对多key的命令支持不全,因为多个key不一定在同一个hash槽或者节点上
 
 #### 特殊实现的命令
-* rename(K oldKey, K newKey);
-* del(K... keys);
+* rename(K oldKey, K newKey)；
+* del(K... keys)；
 * ...
 
 #### 用法
@@ -32,7 +33,7 @@
     <!-- java环境依赖此项 -->
     <dependency>
         <groupId>com.caiya</groupId>
-        <artifactId>cache-api</artifactId>
+        <artifactId>cache-redis</artifactId>
         <version>${latest-version}</version>
     </dependency>
     <!-- spring环境依赖此项 -->
@@ -42,4 +43,8 @@
         <version>${latest-version}</version>
     </dependency>
 ```
-4. 用法（包括分布式锁），见cache-redis、cache-test模块中的单元测试；基于注解的缓存用法见com.caiya.cache.redis.spring.ExtendedRedisCacheManager类前注释
+4. 用法（包括分布式锁）见cache-redis、cache-test模块中的单元测试；基于注解的缓存用法见com.caiya.cache.redis.spring.ExtendedRedisCacheManager类前注释
+5. 关于分布式锁的实现
+```text
+实现简单的互斥锁，暂不支持可重入性、读写锁等特性。
+```

@@ -4,10 +4,11 @@ import com.caiya.cache.CacheApi;
 import com.caiya.cache.RedisConstant;
 import com.caiya.cache.ScanResult;
 import com.caiya.cache.SetOption;
-import org.springframework.data.redis.cache.RedisCacheKey;
+import com.caiya.cache.redis.RedisCacheKey;
 import org.springframework.data.redis.connection.RedisConnectionCommands;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.connection.RedisStringCommands;
+import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.types.Expiration;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis Cache Implementation, Based on spring-data-redis.
+ * Redis Cache Implementation, Base on spring-data-redis.
  *
  * @author wangnan
  * @see org.springframework.data.redis.core.RedisOperations
@@ -169,8 +170,8 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
             } else {
                 throw new IllegalArgumentException("Unsupported set options");
             }
-            connection.set(rawKey(key), rawValue(value), Expiration.from(expirationTime, timeUnit), redisSetOption);
-            return null;
+            Boolean result = connection.set(rawKey(key), rawValue(value), Expiration.from(expirationTime, timeUnit), redisSetOption);
+            return Boolean.TRUE.equals(result) ? "OK" : null;
         });
     }
 
@@ -179,6 +180,14 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         return redisOperations.execute((RedisCallback<V>) connection -> {
             byte[] bs = connection.get(rawKey(key));
             return deserializeValue(bs);
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get(final K key, RedisSerializer keySerializer, RedisSerializer valueSerializer) {
+        return redisOperations.execute((RedisCallback<T>) connection -> {
+            byte[] bs = connection.get(rawKey(key, keySerializer));
+            return (T) deserializeValue(bs, valueSerializer);
         });
     }
 
@@ -218,11 +227,31 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         return redisOperations.execute((RedisCallback<Long>) connection -> connection.ttl(rawKey(key)));
     }
 
+    @Override
+    public Long incr(K key) {
+        return redisOperations.execute((RedisCallback<Long>) connection -> connection.incr(rawKey(key)));
+    }
+
+    @Override
+    public Long incrBy(K key, long integer) {
+        return redisOperations.execute((RedisCallback<Long>) connection -> connection.incrBy(rawKey(key), integer));
+    }
+
+    @Override
+    public Long decr(K key) {
+        return redisOperations.execute((RedisCallback<Long>) connection -> connection.decr(rawKey(key)));
+    }
+
+    @Override
+    public Long decrBy(K key, long integer) {
+        return redisOperations.execute((RedisCallback<Long>) connection -> connection.decrBy(rawKey(key), integer));
+    }
+
     /**
      * @param oldKey must not be {@literal null}.
      * @param newKey must not be {@literal null}.
      * @return NULL
-     * @see #rename(K, K, RedisConstant.Operation)
+     * @see #rename(K, K, com.caiya.cache.RedisConstant.Operation)
      */
     @Override
     public String rename(K oldKey, K newKey) {
@@ -374,13 +403,27 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
 
     @Override
     public Object eval(String script, int keyCount, String... params) {
-        throw new UnsupportedOperationException("Unsupported Command Operation");
+        byte[][] paramsBytes = new byte[params.length][];
+        int index = 0;
+        for (String param : params) {
+            paramsBytes[index++] = STRING_REDIS_SERIALIZER.serialize(param);
+        }
+        return redisOperations.execute((RedisCallback<Long>) connection -> connection.eval(STRING_REDIS_SERIALIZER.serialize(script), ReturnType.VALUE, keyCount, paramsBytes));
     }
 
     @SuppressWarnings("unchecked")
     private byte[] rawKey(Object key) {
         if (keyPrefix != null) {
-            return new RedisCacheKey(key).usePrefix(keyPrefix).withKeySerializer(getKeySerializer()).getKeyBytes();
+            return new RedisCacheKey(key).usePrefix(keyPrefix).getKeyBytes();
+        }
+
+        return keySerializer.serialize(key);
+    }
+
+    @SuppressWarnings("unchecked")
+    private byte[] rawKey(Object key, RedisSerializer keySerializer) {
+        if (keyPrefix != null) {
+            return new RedisCacheKey(key).usePrefix(keyPrefix).getKeyBytes();
         }
 
         return keySerializer.serialize(key);
@@ -403,6 +446,11 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
 
     @SuppressWarnings("unchecked")
     private V deserializeValue(byte[] value) {
+        return (V) valueSerializer.deserialize(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private V deserializeValue(byte[] value, RedisSerializer valueSerializer) {
         return (V) valueSerializer.deserialize(value);
     }
 
@@ -440,12 +488,12 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         this.keyPrefix = keyPrefix;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public byte[] getKeyPrefix() {
         return keyPrefix;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }
