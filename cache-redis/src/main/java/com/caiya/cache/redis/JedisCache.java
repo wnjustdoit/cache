@@ -1,11 +1,10 @@
 package com.caiya.cache.redis;
 
 import com.caiya.cache.*;
-import com.caiya.cache.*;
 import com.caiya.serialization.Serializer;
 import com.caiya.serialization.jdk.JdkSerializationSerializer;
-import com.caiya.serialization.jdk.SerializationUtils;
 import com.caiya.serialization.jdk.StringSerializer;
+import com.caiya.serialization.util.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCluster;
@@ -461,6 +460,10 @@ public class JedisCache<K, V> implements Cache<K, V> {
         } catch (IOException e) {
             logger.error("jedisCluster close failed", e);
         }
+    }
+
+    public JedisCluster getNativeJedisCluster() {
+        return jedisCluster;
     }
 
     public void setKeyPrefix(byte[] keyPrefix) {

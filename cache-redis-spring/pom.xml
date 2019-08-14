@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <groupId>com.caiya</groupId>
-    <artifactId>cache-redis-integration-spring</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+
     <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cache-redis-spring</artifactId>
+    <groupId>com.caiya</groupId>
+    <version>1.1.1-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
-    <name>cache-redis-integration-spring</name>
-    <description>缓存redis集成spring框架的实现，含spring对缓存的注解；依赖于spring-data-redis实现</description>
+    <name>cache-redis-spring</name>
+    <description>引入cache-redis模块，实现spring对缓存的抽象</description>
 
     <properties>
         <java.version>1.8</java.version>
@@ -17,7 +20,6 @@
         <maven.test.skip>true</maven.test.skip>
         <spring.version>5.0.8.RELEASE</spring.version>
         <spring-boot.version>2.0.4.RELEASE</spring-boot.version>
-        <lombok.version>1.18.4</lombok.version>
     </properties>
 
     <dependencyManagement>
@@ -46,24 +48,13 @@
             <artifactId>cache-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-            <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-            <version>${spring-boot.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -104,4 +95,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

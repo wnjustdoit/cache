@@ -191,6 +191,7 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Deprecated
     public Set<K> keys(final String pattern) {
@@ -315,6 +316,7 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         return redisOperations.execute((RedisCallback<Boolean>) connection -> connection.hExists(rawKey(key), rawHashKey(field)));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <HK> Set<HK> hKeys(final K key) {
         return redisOperations.execute((RedisCallback<Set<HK>>) connection -> SerializationUtils.deserialize(connection.hKeys(rawKey(key)), hashKeySerializer));
@@ -370,6 +372,7 @@ public class RedisCache<K, V> implements CacheApi<K, V> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<V> lRange(final K key, final long begin, final long end) {
         return redisOperations.execute((RedisCallback<List<V>>) connection -> {

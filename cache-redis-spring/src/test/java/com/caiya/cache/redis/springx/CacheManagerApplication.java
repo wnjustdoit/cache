@@ -1,14 +1,13 @@
-package com.caiya.cache.redis.spring.starter;
+package com.caiya.cache.redis.springx;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = "com.caiya")
-public class CacheRedisApplication {
-
+public class CacheManagerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CacheRedisApplication.class, args);
+        SpringApplication.run(CacheManagerApplication.class, args);
     }
 
 }

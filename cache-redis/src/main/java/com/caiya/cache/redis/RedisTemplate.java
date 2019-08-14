@@ -53,7 +53,6 @@ public class RedisTemplate<K, V> extends RedisAccessor<K, V> implements RedisOpe
         RedisConnection connection = null;
         try {
             connection = factory.getConnection();
-
             return action.doInRedis((JedisCache<K, V>) ((JedisClusterConnection) connection).getNativeConnection());
         } finally {
             try {
@@ -63,7 +62,6 @@ public class RedisTemplate<K, V> extends RedisAccessor<K, V> implements RedisOpe
                 logger.error("redis client close failed", e);
             }
         }
-
     }
 
     @Override

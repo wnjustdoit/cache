@@ -9,6 +9,11 @@ package com.caiya.cache;
 public enum SetOption {
 
     /**
+     * Do not set any additional command argument
+     */
+    UPSERT(null),
+
+    /**
      * {@code NX}
      */
     SET_IF_ABSENT("nx"),
@@ -29,6 +34,15 @@ public enum SetOption {
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * Do not set any additional command argument.
+     *
+     * @return NULL enum class
+     */
+    public static SetOption upsert() {
+        return UPSERT;
     }
 
     /**

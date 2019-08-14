@@ -43,7 +43,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>cache-redis</artifactId>
+            <artifactId>cache-redis-spring</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

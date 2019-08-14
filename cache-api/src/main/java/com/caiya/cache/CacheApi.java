@@ -28,6 +28,16 @@ public interface CacheApi<K, V> {
     long del(K... keys);
 
     /**
+     * Set the {@code value} for {@code key}.
+     * <p>
+     * See http://redis.io/commands/set
+     *
+     * @param key   the cache key
+     * @param value the cache value
+     */
+//    void set(K key, V value);
+
+    /**
      * Set the {@code value} and expiration in {@code seconds} for {@code key}.
      * May be deprecated in the future, recommended to use {@link #set(K key, V value, long liveTime, TimeUnit timeUnit);} instead.
      * <p>

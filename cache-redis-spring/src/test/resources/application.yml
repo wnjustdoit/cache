@@ -4,4 +4,4 @@ cache:
     keySerializer: com.caiya.serialization.jdk.StringSerializer
     hashKeySerializer: com.caiya.serialization.jdk.StringSerializer
     default-cache-name: caiya_cache
-    default-expiration-seconds: 1800
+    defaultExpirationSeconds: 1800
