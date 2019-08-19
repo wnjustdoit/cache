@@ -12,28 +12,41 @@ import java.util.UUID;
  * @author wangnan
  * @since 1.0
  */
-public abstract class AbstractLock<T> implements Lock<T> {
+public abstract class AbstractLock<T> implements RLock<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 20;
+    private static final Duration DEFAULT_MAX_LOCK_WAIT_TIME = Duration.ofSeconds(Integer.MAX_VALUE);
 
-    private static final long DEFAULT_TRY_LOCK_DURATION_SECONDS = Integer.MAX_VALUE;
+    private static final Duration DEFAULT_MAX_LOCK_LEASE_TIME = Duration.ofSeconds(Integer.MAX_VALUE);
 
     /**
-     * The lock name.
+     * The lock name
      */
     private String name;
 
     /**
      * The unique lock value in distributed situation, associated with current thread
+     * <p>
+     * If null at runtime, it will be a random UUID
+     * </p>
      */
-    private String value;
+    private String valuePrefix;
+
+    /*
+    The value splitter, concat valuePrefix and threadId as the default
+     */
+    private String valueSplitter = "-";
 
     /**
-     * The lock timeout. To avoid dead lock.
+     * Default lock wait time
      */
-    private Duration lockTimeout = Duration.ofSeconds(DEFAULT_LOCK_EXPIRATION_SECONDS);
+    private Duration defaultWaitTime = DEFAULT_MAX_LOCK_WAIT_TIME;
+
+    /**
+     * Default lock lease time
+     */
+    private Duration defaultLeaseTime = DEFAULT_MAX_LOCK_LEASE_TIME;
 
     /**
      * Integration method for easy to use.
@@ -72,41 +85,54 @@ public abstract class AbstractLock<T> implements Lock<T> {
     }
 
     /**
-     * 如果是分布式环境，构成形式可以是:MacId + JvmRoute + ThreadId.
+     * In distributed environment, it usually consists of: MacId + JvmRoute + ThreadId.
      * <p>
-     * 默认使用UUID标记.
+     * By default, use a random UUID as prefix
      * </p>
      *
      * @return the unique global lock value
      */
-    protected String getValue() {
-        if (this.value == null) {
-            this.value = getRandomUUID();
+    String getValueByThreadId(long threadId) {
+        if (this.valuePrefix == null) {
+            this.valuePrefix = getRandomUUID().replaceAll("-", "");
         }
-        return this.value;
+        return this.valuePrefix + this.valueSplitter + threadId;
     }
 
-    public void setValue(String value) {
-        if (value == null) {
-            throw new IllegalArgumentException("lock value cannot be null");
+    public void setValuePrefix(String valuePrefix) {
+        if (valuePrefix == null) {
+            throw new IllegalArgumentException("lock valuePrefix cannot be null");
         }
-        this.value = value;
+        this.valuePrefix = valuePrefix;
     }
 
     private String getRandomUUID() {
         return UUID.randomUUID().toString();
     }
 
-    public void setLockTimeout(Duration lockTimeout) {
-        if (lockTimeout == null) {
-            throw new IllegalArgumentException("lock timeout cannot be null");
-        }
-        this.lockTimeout = lockTimeout;
+    /**
+     * Set the default lock wait time
+     *
+     * @param defaultWaitTime default lock wait time
+     */
+    public void setDefaultWaitTime(Duration defaultWaitTime) {
+        this.defaultWaitTime = defaultWaitTime;
     }
 
-    @Override
-    public Duration getLockTimeout() {
-        return lockTimeout;
+    public Duration getDefaultWaitTime() {
+        return defaultWaitTime;
     }
 
+    /**
+     * set the default lock lease time
+     *
+     * @param defaultLeaseTime default lock lease time
+     */
+    public void setDefaultLeaseTime(Duration defaultLeaseTime) {
+        this.defaultLeaseTime = defaultLeaseTime;
+    }
+
+    public Duration getDefaultLeaseTime() {
+        return defaultLeaseTime;
+    }
 }

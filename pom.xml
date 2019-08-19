@@ -4,13 +4,13 @@
 
     <groupId>com.caiya</groupId>
     <artifactId>cache-parent</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
     <modules>
         <module>cache-api</module>
         <module>cache-redis</module>
-        <module>cache-redis-integration-spring</module>
-        <module>cache-redis-spring-boot-starter</module>
         <module>cache-redis-spring</module>
+        <module>cache-redis-spring-boot-starter</module>
+        <module>cache-redis-integration-spring</module>
     </modules>
     <packaging>pom</packaging>
 

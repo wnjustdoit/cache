@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <groupId>com.caiya</groupId>
     <artifactId>cache-redis-integration-spring</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
     <modelVersion>4.0.0</modelVersion>
 
     <packaging>jar</packaging>
@@ -17,7 +17,6 @@
         <maven.test.skip>true</maven.test.skip>
         <spring.version>5.0.8.RELEASE</spring.version>
         <spring-boot.version>2.0.4.RELEASE</spring-boot.version>
-        <lombok.version>1.18.4</lombok.version>
     </properties>
 
     <dependencyManagement>
@@ -62,7 +61,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

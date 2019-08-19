@@ -7,7 +7,7 @@
 
     <artifactId>cache-redis-spring</artifactId>
     <groupId>com.caiya</groupId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
@@ -55,6 +55,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

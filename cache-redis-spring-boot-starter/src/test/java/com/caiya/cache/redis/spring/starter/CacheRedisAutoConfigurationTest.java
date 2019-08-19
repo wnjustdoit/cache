@@ -4,38 +4,53 @@ import com.caiya.cache.redis.RedisTemplate;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = CacheRedisApplication.class)
 public class CacheRedisAutoConfigurationTest {
 
-    @Autowired
+    @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Autowired
+    @Resource
+    private RedisTemplate<String, String> stringRedisTemplate;
+
+    @Resource
     private CacheManager cacheManager;
 
     @Test
     public void test() {
         String key = "测试key";
+        String key2 = "测试key2";
         String value = "测试value";
+
         redisTemplate.set(key, value, 60);
         Assert.assertEquals(value, redisTemplate.get(key));
+
+        stringRedisTemplate.set(key2, value, 60);
+        Assert.assertEquals(value, stringRedisTemplate.get(key2));
     }
 
     @Test
     public void test_hash() {
         String key = "测试hash.key";
+        String key2 = "测试hash.key2";
         String hkey = "测试hash.hkey";
         String hvalue = "测试hash.hvalue";
+
         redisTemplate.hSet(key, hkey, hvalue);
         redisTemplate.expire(key, 60);
         Assert.assertEquals(hvalue, redisTemplate.hGet(key, hkey));
+
+        stringRedisTemplate.hSet(key2, hkey, hvalue);
+        stringRedisTemplate.expire(key2, 60);
+        Assert.assertEquals(hvalue, stringRedisTemplate.hGet(key2, hkey));
     }
 
     @Test
@@ -45,7 +60,9 @@ public class CacheRedisAutoConfigurationTest {
         String key = "测试cacheManager";
         Object value = "测试cacheManager_value";
         cache.put(key, value);
-        Assert.assertEquals(value, cache.get(key).get());
+        Cache.ValueWrapper valueWrapper = cache.get(key);
+        Assert.assertNotNull(valueWrapper);
+        Assert.assertEquals(value, valueWrapper.get());
         cache.evict(key);
         Assert.assertNull(cache.get(key));
     }

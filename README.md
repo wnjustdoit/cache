@@ -41,8 +41,13 @@ JedisCluster底层实现默认使用连接池，并对一些操作无法支持�
         <artifactId>cache-redis</artifactId>
         <version>${latest-version}</version>
     </dependency>
-    
     <!-- spring环境依赖此项 -->
+    <dependency>
+        <groupId>com.caiya</groupId>
+        <artifactId>cache-redis-spring-boot-starter</artifactId>
+        <version>${latest-version}</version>
+    </dependency>
+    <!-- 陈旧的spring集成方式（基于spring-data-redis） -->
     <dependency>
         <groupId>com.caiya</groupId>
         <artifactId>cache-redis-integration-spring</artifactId>

@@ -4,9 +4,12 @@ import com.caiya.cache.CacheApi;
 import com.caiya.cache.redis.util.Constant;
 import com.caiya.cache.redis.JedisCache;
 import com.caiya.serialization.jdk.StringSerializer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 
@@ -27,11 +30,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class RedisLockTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(RedisLockTest.class);
+
     private RedisLockFactory redisLockFactory;
 
     @Before
     public void before() {
         initLockFactory();
+    }
+
+    @After
+    public void after() {
+        redisLockFactory.destroy();
     }
 
     private void initLockFactory() {
@@ -48,7 +58,7 @@ public class RedisLockTest {
         ((JedisCache) cache).setKeySerializer(stringSerializer);
         ((JedisCache) cache).setValueSerializer(stringSerializer);
         ((JedisCache) cache).setKeyPrefix((Constant.DEFAULT_CACHE_NAME + ":lock:").getBytes(StandardCharsets.UTF_8));
-        redisLockFactory = RedisLockFactory.create(cache).withLockTimeout(Duration.ofSeconds(15));
+        redisLockFactory = RedisLockFactory.create(cache);
     }
 
 
@@ -58,12 +68,12 @@ public class RedisLockTest {
     @Test
     public void testTryLockManual() {
         RedisLock redisLock = redisLockFactory.buildLock("Mutuki官方旗舰店");
-        redisLock.setLockTimeout(Duration.ofSeconds(10));
+        redisLock.setDefaultLeaseTime(Duration.ofSeconds(30));
         boolean locked = redisLock.tryLock();
         if (locked) {
             try {
                 // do my business
-                System.out.println("do my business..");
+                logger.info("do my business..");
             } finally {
                 redisLock.unlock();
             }
@@ -79,10 +89,12 @@ public class RedisLockTest {
     @Test
     public void testLockManual() {
         RedisLock redisLock = redisLockFactory.buildLock("Mutuki官方旗舰店");
+        redisLock.setDefaultWaitTime(Duration.ofSeconds(30));
+        redisLock.setDefaultLeaseTime(Duration.ofSeconds(30));
         redisLock.lock();
         try {
             // do my business
-            System.out.println("do my business..");
+            logger.info("do my business..");
         } finally {
             redisLock.unlock();
         }
@@ -91,7 +103,7 @@ public class RedisLockTest {
 
     @Test
     public void testSingle() {
-        testInternal("Mutuki官方旗舰店");
+        testTryOnceCallbackInternal("Mutuki官方旗舰店");
     }
 
     @Test
@@ -100,7 +112,7 @@ public class RedisLockTest {
         ExecutorService executorService = Executors.newFixedThreadPool(1000);
         for (int i = 0; i < 100000; i++) {
             executorService.execute(new Thread(() -> {
-                testInternal("Mutuki官方旗舰店");
+                testTryOnceCallbackInternal("Mutuki官方旗舰店");
             }));
             try {
                 TimeUnit.SECONDS.sleep(new Random().nextInt(2));
@@ -112,17 +124,19 @@ public class RedisLockTest {
         executorService.awaitTermination(10, TimeUnit.MINUTES);
     }
 
-    private void testInternal(String lockKey) {
-        String result = redisLockFactory.buildLock(lockKey).execute(new LockCallBack<String>() {
+    private void testTryOnceCallbackInternal(String lockKey) {
+        RedisLock redisLock = redisLockFactory.buildLock(lockKey);
+        redisLock.setDefaultLeaseTime(Duration.ofSeconds(30));
+        logger.info("current lockKey:{}, lockName:{}", lockKey, redisLock.getName());
+        String result = redisLock.execute(new LockCallBack<String>() {
             @Override
             public String onSuccess() {
                 // do my business
-                // ...
-                System.out.println("lock success, do my business, current thread is: " + Thread.currentThread().getName());
+                logger.info("lock success, current lockKey:{}, lockName:{}, isHeldByCurrentThread:{}, remainTimeToLive:{}", lockKey, redisLock.getName(), redisLock.isHeldByCurrentThread(), redisLock.remainTimeToLive());
                 try {
                     TimeUnit.SECONDS.sleep(new Random().nextInt(2));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage(), e);
                 }
                 return Thread.currentThread().getName();
             }
@@ -130,15 +144,14 @@ public class RedisLockTest {
             @Override
             public void onFailure(Throwable throwable) {
                 // may handle exception
-//                System.out.println(throwable);
+                logger.error(throwable.getMessage(), throwable);
             }
         });
         if (result != null) {
-            System.out.println("lock success, result is: " + result);
+            logger.info("lock success, result is: " + result);
         } else {
-            System.out.println("lock failed, current thread is: " + Thread.currentThread().getName());
+            logger.info("lock failed, current thread is: " + Thread.currentThread().getName());
         }
     }
-
 
 }

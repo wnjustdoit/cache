@@ -7,15 +7,15 @@
 
     <artifactId>cache-redis-spring-boot-starter</artifactId>
     <groupId>com.caiya</groupId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
 
     <name>cache-redis-spring-boot-starter</name>
-    <description>基于cache-redis模块自定义starter</description>
+    <description>基于cache-redis模块自定义spring-boot-starter</description>
 
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.test.skip>true</maven.test.skip>
+        <maven.test.skip>false</maven.test.skip>
         <spring.version>5.0.8.RELEASE</spring.version>
         <spring-boot.version>2.0.4.RELEASE</spring-boot.version>
     </properties>
@@ -45,10 +45,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>cache-redis-spring</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

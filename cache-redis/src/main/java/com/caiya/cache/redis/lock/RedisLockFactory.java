@@ -1,7 +1,11 @@
 package com.caiya.cache.redis.lock;
 
 import com.caiya.cache.CacheApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 
 /**
@@ -9,15 +13,12 @@ import java.time.Duration;
  */
 public class RedisLockFactory {
 
+    private static final Logger logger = LoggerFactory.getLogger(RedisLockFactory.class);
+
     /**
      * The cache client
      */
     private CacheApi<String, String> cache;
-
-    /**
-     * The lock timeout
-     */
-    private Duration lockTimeout;
 
 
     private RedisLockFactory() {
@@ -28,16 +29,8 @@ public class RedisLockFactory {
         return new RedisLockFactory().setCache(cache);
     }
 
-    public RedisLockFactory withLockTimeout(Duration lockTimeout) {
-        return setLockTimeout(lockTimeout);
-    }
-
     public RedisLock buildLock(String name) {
         return new RedisLock(cache, name);
-    }
-
-    public RedisLock buildLock(String name, Duration lockTimeout) {
-        return new RedisLock(cache, name, lockTimeout);
     }
 
 
@@ -46,15 +39,16 @@ public class RedisLockFactory {
         return this;
     }
 
-    private RedisLockFactory setLockTimeout(Duration lockTimeout) {
-        if (lockTimeout == null) {
-            throw new IllegalArgumentException("lock timeout cannot be null");
+    /**
+     * The destroy method
+     */
+    public void destroy() {
+        if (cache instanceof Closeable) {
+            try {
+                ((Closeable) cache).close();
+            } catch (IOException e) {
+                logger.error("cache client close failed", e);
+            }
         }
-        this.lockTimeout = lockTimeout;
-        return this;
-    }
-
-    public Duration getLockTimeout() {
-        return lockTimeout;
     }
 }
